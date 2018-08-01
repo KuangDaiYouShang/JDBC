@@ -2,18 +2,20 @@ package demoforAll;
 
 import java.sql.*;
 
+import enums.DriverInfoEnum;
+
 public class DB_manipulator {
 	static{
 		try {
-			Class.forName("com.mysql.jdbc.Driver");
+			Class.forName(DriverInfoEnum.DRIVER.getinfo());
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	private static final String url = "jdbc:mysql://localhost:3306/testdb?useSSL=true&useUnicode=true";
-	private static final String usrname = "root";
-	private static final String password = "123456";
+	private static final String url = DriverInfoEnum.URL.getinfo();
+	private static final String usrname = DriverInfoEnum.USERNAME.getinfo();
+	private static final String password = DriverInfoEnum.PASSWORD.getinfo();
 	
 	private static Connection conn = null;
 	private static PreparedStatement pst = null;
