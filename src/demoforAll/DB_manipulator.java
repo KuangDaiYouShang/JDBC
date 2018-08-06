@@ -9,7 +9,6 @@ public class DB_manipulator {
 		try {
 			Class.forName(DriverInfoEnum.DRIVER.getinfo());
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -21,6 +20,35 @@ public class DB_manipulator {
 	private static PreparedStatement pst = null;
 	private static  ResultSet rs = null;
 	
+	public final static void getConnection() { 
+		try {
+			conn = DriverManager.getConnection(url, usrname, password);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public final static void setParameters(PreparedStatement pst, Object...parameters) {
+		try {
+			if(parameters.length > 0) {
+				for(int i = 0; i < parameters.length; i++) {
+					pst.setObject(i+1, parameters[i]);
+				} 
+			}
+		}catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public static int executeUpdate(String sql, Object...objects) throws SQLException {
+		int row = 0;
+		getConnection();
+		pst = conn.prepareStatement(sql);
+		setParameters(pst, objects);
+		row = pst.executeUpdate();
+		return row;
+	}
 	
 	public static void add(String name, String sex) throws SQLException {
 		String addsql = "insert into t_emp(emp_id,emp_name,emp_sex) values(null,"
@@ -61,6 +89,7 @@ public class DB_manipulator {
 		}
 	}
 	
+	/*
 	public static void main(String args[]) {
 		try {
 			conn = DriverManager.getConnection(url, usrname, password);
@@ -84,5 +113,5 @@ public class DB_manipulator {
 				e.printStackTrace();
 			}
 		}
-	}
+	}*/
 }
