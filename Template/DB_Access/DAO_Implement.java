@@ -13,4 +13,13 @@ public class DAO_Implement implements DAO {
 		temp.save(book);
 	}
 
+	@Override
+	public void delete(Integer id) {
+		BookInfo book = new BookInfo();
+		book.setBookID(id);
+		temp.delete(book);
+	}
+	
+	
+
 }
