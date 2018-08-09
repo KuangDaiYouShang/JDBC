@@ -10,16 +10,15 @@ public class BookInfo implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	
 	@PK
 	@column(value = "book_id")
-	private int bookID;
+	private Integer bookID;
 	
 	@column(value = "author")
 	private String author;
 	
 	@column(value = "book_price")
-	private double price;
+	private Double price;
 	
 	public int getBookID() {
 		return bookID;

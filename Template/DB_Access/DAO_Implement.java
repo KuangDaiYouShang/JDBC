@@ -19,7 +19,21 @@ public class DAO_Implement implements DAO {
 		book.setBookID(id);
 		temp.delete(book);
 	}
-	
-	
 
+	@Override
+	public void delete(BookInfo book) {
+		BookInfo conditions = new BookInfo();
+		conditions.setAuthor(book.getAuthor());
+		conditions.setPrice(book.getPrice());
+		temp.delete(book, conditions);
+	}
+	@Override
+	public void update(BookInfo book) {
+		temp.update(book);
+	}
+	
+	@Override
+	public void update(BookInfo entity, BookInfo condition) {
+		temp.update(entity, condition);
+	}
 }

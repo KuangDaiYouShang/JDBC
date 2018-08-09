@@ -1,15 +1,17 @@
 package Test;
 
-import DB_Access.DAO;
-import DB_Access.DAO_Implement;
+import DB_Access.*;
 import entity.BookInfo;
 
-public class TestDelete {
+public class TestUpdate {
 	public static void main(String args[]) {
 		DAO bookDao = new DAO_Implement();
 		BookInfo book = new BookInfo();
 		book.setAuthor("Alex");
 		book.setPrice(999);
-		bookDao.delete(book);;
+		BookInfo condition = new BookInfo();
+		condition.setAuthor("Max");
+		condition.setPrice(1024);
+		bookDao.update(book, condition);
 	}
 }

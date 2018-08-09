@@ -63,7 +63,13 @@ public class MySQLTemplate extends TemplateHandler {
 			e.printStackTrace();
 		}
 	}
-
+	
+	
+	/*
+	 * Delete with primary key.
+	 * Delete from table where pk=pkvalue
+	 *
+	 */
 	@Override
 	public <T> void delete(T entity) {
 		Class<?> clazz = entity.getClass();
@@ -77,6 +83,10 @@ public class MySQLTemplate extends TemplateHandler {
 			try {
 				for(int i = 0; i < fields.length; i++) {
 					Field field = fields[i];
+					fieldName = field.getName();
+					if(fieldName.equals(SerializedId.SERIALIZED_ID.getValue())) {
+						continue;
+					}
 					PK p = field.getAnnotation(PK.class);
 					if(p != null) {
 						fieldName = Helper.getFieldName(field);
@@ -103,6 +113,117 @@ public class MySQLTemplate extends TemplateHandler {
 		}
 	}
 	
+	/*
+	 * Delete with conditions.
+	 * Delete from table where c1 = 1, c2 = 2....
+	 */
+	@Override
+	public <T> void delete(T entity, T conditions) throws MyORMException {
+		Class<?> clazz = entity.getClass();
+		String tableName = Helper.getTableName(clazz);
+		StringBuffer sqlBuilder = new StringBuffer();
+		sqlBuilder.append("delete from ").append(tableName).append(" where ");
+		
+		//check if conditions exist
+		if(conditions != null) {
+			List<Object> parameters = new ArrayList<>();
+			Field[] fields = clazz.getDeclaredFields();
+			try {
+				if(!ArrayUtils.isEmpty(fields)) {
+					for(int i = 0; i < fields.length; i++) {
+						Field field = fields[i];
+						//enable accessibility
+						field.setAccessible(true);
+						String fieldName = field.getName();
+						if(fieldName.equals(SerializedId.SERIALIZED_ID.getValue())) {
+							continue;
+						}
+						fieldName = Helper.getFieldName(field);
+						Object fieldValue = field.get(entity);
+						if(fieldValue != null) {
+							sqlBuilder.append(fieldName).append("=? and ");
+							parameters.add(fieldValue);
+						}
+					}
+				}
+				String s = sqlBuilder.substring(0, sqlBuilder.lastIndexOf(" and "));
+				System.out.println(s);
+				System.out.println(parameters);
+				DB_manipulator.executeUpdate(s, parameters.toArray());
+			} catch (Exception e) {
+				throw new MyORMException("添加删除条件的时候出现异常信息为："+e.getMessage());
+			}
+		}
+	}
+	
+	/*
+	 * update with primary key.
+	 * update table set f1 = 1, f2 = 2.. where pk = 1;
+	 */
+	@Override
+	public <T> void update(T entity) {
+		Class<?> clazz = entity.getClass();
+		String tableName = Helper.getTableName(clazz);
+		StringBuffer sqlBuilder = new StringBuffer();
+		sqlBuilder.append("update ").append(tableName).append(" set ");
+		Field[] fields = clazz.getDeclaredFields();
+		String pkColumn = null;
+		Object pkValue = null;
+		List<Object> parameters = new ArrayList<>();
+		if(!ArrayUtils.isEmpty(fields)) {
+			try {
+				for(int i = 0; i < fields.length; i++) {
+					Field field = fields[i];
+					field.setAccessible(true);
+					String fieldName = field.getName();
+					if(fieldName.equals(SerializedId.SERIALIZED_ID.getValue())) {
+						continue;
+					}
+					PK pk = field.getAnnotation(PK.class);
+					if(pk != null) {
+						//get primary key name & value
+						pkColumn = Helper.getFieldName(field);
+						pkValue = field.get(entity);
+						continue;
+					} else {
+						fieldName = Helper.getFieldName(field);
+						sqlBuilder.append(fieldName).append("=?,");
+						parameters.add(field.get(entity));
+					}
+				}
+				sqlBuilder.deleteCharAt(sqlBuilder.length()-1);
+				sqlBuilder.append(" where ").append(pkColumn).append("=").append(pkValue);
+				System.out.println(sqlBuilder.toString());
+				DB_manipulator.executeUpdate(sqlBuilder.toString(), parameters.toArray());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/*
+	 * update with conditions
+	 * update table set f1=1, f2=2... where c1=1, c2=2...
+	 */
+	@Override
+	public <T> void update(T entity, T conditions) throws MyORMException {
+		StringBuffer sqlBuilder = new StringBuffer();
+		Class<?> clazz = entity.getClass();
+		String tableName = Helper.getTableName(clazz);
+		sqlBuilder.append("update ").append(tableName).append(" set ");
+		List<Object> parameters = new ArrayList<>();
+		Helper.HandleFields(entity, sqlBuilder, parameters);
+		sqlBuilder.append(" where ");
+		Helper.handleConditions(conditions, sqlBuilder, parameters);
+		try {
+			DB_manipulator.executeUpdate(sqlBuilder.toString(), parameters.toArray());
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+
 	private static class Helper {
 		/*
 		 * Integrated common code blocks as methods.
@@ -127,6 +248,64 @@ public class MySQLTemplate extends TemplateHandler {
 			}
 			return fieldName;
 		}
+		
+		private static <T> void HandleFields(T entity, StringBuffer sqlBuilder, List<Object> parameters) {
+			Class<?> clazz = entity.getClass();
+			Field[] fields = clazz.getDeclaredFields();
+			if(!ArrayUtils.isEmpty(fields)) {
+				try {
+					for(int i = 0; i < fields.length; i++) {
+						Field field = fields[i];
+						field.setAccessible(true);
+						String fieldName = field.getName();
+						if(fieldName.equals(SerializedId.SERIALIZED_ID.getValue())) {
+							continue;
+						}
+						PK pk = field.getAnnotation(PK.class);
+						if(pk != null) {
+							continue;
+						}
+						String columnName = Helper.getFieldName(field);
+						Object columnValue = field.get(entity);
+						//判断是否为需要更新的列
+						if(columnValue != null) {
+							sqlBuilder.append(columnName).append("=?,");
+							parameters.add(columnValue);
+						}
+					}
+					sqlBuilder.deleteCharAt(sqlBuilder.length() - 1);
+				}catch (Exception e) {
+					throw new MyORMException("" + e.getMessage());
+				}
+			}
+		}
+		
+		private static <T> void handleConditions(T entity, StringBuffer sqlBuilder, List<Object> parameters) {
+			Class<?> clazz = entity.getClass();
+			Field[] fields = clazz.getDeclaredFields();
+			try {
+				if(!ArrayUtils.isEmpty(fields)) {
+					for(int i = 0; i < fields.length; i++) {
+						Field field = fields[i];
+						field.setAccessible(true);
+						String fieldName = field.getName();
+						if(fieldName.equals(SerializedId.SERIALIZED_ID.getValue())) {
+							continue;
+						}
+						fieldName = Helper.getFieldName(field);
+						Object fieldValue = field.get(entity);
+						if(fieldValue != null) {
+							sqlBuilder.append(fieldName).append("=? AND ");
+							parameters.add(fieldValue);
+						}
+					}
+				}
+				sqlBuilder.delete(sqlBuilder.lastIndexOf(" AND ")+1, sqlBuilder.length()-1);
+				System.out.println(sqlBuilder);
+				System.out.println(parameters);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
-	
 }
