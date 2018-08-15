@@ -1,15 +1,19 @@
 package Handler;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.*;
 
+
+
 import Annotations.PK;
-import Annotations.Table;
-import Annotations.column;
+import Builder.SQLBuilder;
 import Exception.MyORMException;
 import common.ArrayUtils;
+import common.Helper;
 import demoforAll.DB_manipulator;
+import enums.SearchMode;
 import serialConstant.SerializedId; 
 
 public class MySQLTemplate extends TemplateHandler {
@@ -222,90 +226,115 @@ public class MySQLTemplate extends TemplateHandler {
 		}
 		
 	}
-	
 
-	private static class Helper {
-		/*
-		 * Integrated common code blocks as methods.
-		 */
-		public static String getTableName(Class<?> clazz) {
-			String tableName = clazz.getSimpleName();
-			
-			Table table = clazz.getAnnotation(Table.class);
-			if(table != null) {
-				tableName = table.value().trim().toUpperCase();
-			}
-			return tableName;
-		}
-		
-		public static String getFieldName(Field field) throws SQLException {
-			String fieldName = field.getName().toUpperCase();
-			
-			column col = field.getAnnotation(column.class);
-			
-			if(col != null) {
-				fieldName = col.value().trim().toUpperCase();
-			}
-			return fieldName;
-		}
-		
-		private static <T> void HandleFields(T entity, StringBuffer sqlBuilder, List<Object> parameters) {
-			Class<?> clazz = entity.getClass();
+
+	@Override
+	public <T> List<T> queryAll(Class<T> clazz) throws MyORMException {
+		List<T> res = new ArrayList<>();
+		String sql = SQLBuilder.processQuery(clazz);
+		try {
+			List<Map<String, Object>> table = DB_manipulator.executeQuery(sql);
 			Field[] fields = clazz.getDeclaredFields();
-			if(!ArrayUtils.isEmpty(fields)) {
-				try {
-					for(int i = 0; i < fields.length; i++) {
-						Field field = fields[i];
+			if(!ArrayUtils.isEmpty(table.toArray()) && !ArrayUtils.isEmpty(fields)) {
+				for(int i = 0; i < table.size();i++) {
+					Map<String, Object> row = table.get(i);
+					T instance = null;
+					try {
+						instance = clazz.newInstance();
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						throw new MyORMException("对象实例化的时候出现异常" + e1.getMessage());
+					} 
+					Set<String> columns = row.keySet();
+					for(int j = 0; j < fields.length; j++) {
+						Field field = fields[j];
 						field.setAccessible(true);
-						String fieldName = field.getName();
-						if(fieldName.equals(SerializedId.SERIALIZED_ID.getValue())) {
-							continue;
-						}
-						PK pk = field.getAnnotation(PK.class);
-						if(pk != null) {
-							continue;
-						}
-						String columnName = Helper.getFieldName(field);
-						Object columnValue = field.get(entity);
-						//判断是否为需要更新的列
-						if(columnValue != null) {
-							sqlBuilder.append(columnName).append("=?,");
-							parameters.add(columnValue);
+						String fieldName = Helper.getFieldName(field); 
+						for(String key : columns) {
+							if(key.equalsIgnoreCase(fieldName)) {
+								Object fieldValue = row.get(key);
+								try {
+									// 判断字段类型
+									/*
+									Class<?> fieldTypeClass = field.getType();
+									if (fieldTypeClass == Double.class) {
+										BigDecimal value = (BigDecimal) fieldValue;
+										field.set(instance, value.doubleValue());
+										break;
+									}*/
+									// 设置字段的值
+									field.set(instance, fieldValue);
+								} catch (Exception e) {
+									throw new MyORMException(field.getName()+"字段设置值得时候出现异常信息为:"+e.getMessage());
+								} 
+								break;
+							}
 						}
 					}
-					sqlBuilder.deleteCharAt(sqlBuilder.length() - 1);
-				}catch (Exception e) {
-					throw new MyORMException("" + e.getMessage());
+					res.add(instance);
 				}
 			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		
-		private static <T> void handleConditions(T entity, StringBuffer sqlBuilder, List<Object> parameters) {
-			Class<?> clazz = entity.getClass();
+		return res;
+	}
+
+
+	@Override
+	public <T> List<T> queryCondition(Class<T> clazz, T entity, SearchMode mode) {
+		List<Object> Parameters = new ArrayList<Object>();
+		String sql = SQLBuilder.processQueryCondition(clazz, entity, mode, Parameters);
+		List<T> res = new ArrayList<>();
+		try {
+			List<Map<String, Object>> table = DB_manipulator.executeQuery(sql, Parameters.toArray());
+			for(int i = 0; i < table.size(); i++) {
+				System.out.println(table.get(i).get("author"));
+			}
 			Field[] fields = clazz.getDeclaredFields();
-			try {
-				if(!ArrayUtils.isEmpty(fields)) {
-					for(int i = 0; i < fields.length; i++) {
-						Field field = fields[i];
+			if(!ArrayUtils.isEmpty(table.toArray()) && !ArrayUtils.isEmpty(fields)) {
+				for(int i = 0; i < table.size();i++) {
+					Map<String, Object> row = table.get(i);
+					T instance = null;
+					try {
+						instance = clazz.newInstance();
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						throw new MyORMException("对象实例化的时候出现异常" + e1.getMessage());
+					} 
+					Set<String> columns = row.keySet();
+					for(int j = 0; j < fields.length; j++) {
+						Field field = fields[j];
 						field.setAccessible(true);
-						String fieldName = field.getName();
-						if(fieldName.equals(SerializedId.SERIALIZED_ID.getValue())) {
-							continue;
-						}
-						fieldName = Helper.getFieldName(field);
-						Object fieldValue = field.get(entity);
-						if(fieldValue != null) {
-							sqlBuilder.append(fieldName).append("=? AND ");
-							parameters.add(fieldValue);
+						String fieldName = Helper.getFieldName(field); 
+						for(String key : columns) {
+							if(key.equalsIgnoreCase(fieldName)) {
+								Object fieldValue = row.get(key);
+								try {
+									// 判断字段类型
+									/*Class<?> fieldTypeClass = field.getType();
+									if (fieldTypeClass == Double.class) {
+										BigDecimal value = (BigDecimal) fieldValue;
+										field.set(instance, value.doubleValue());
+										break;
+									}*/
+									// 设置字段的值
+									field.set(instance, fieldValue);
+								} catch (Exception e) {
+									throw new MyORMException(field.getName()+"字段设置值得时候出现异常信息为:"+e.getMessage());
+								} 
+								break;
+							}
 						}
 					}
+					res.add(instance);
 				}
-				sqlBuilder.delete(sqlBuilder.lastIndexOf(" AND ")+1, sqlBuilder.length()-1);
-				System.out.println(sqlBuilder);
-				System.out.println(parameters);
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		return res;
 	}
 }

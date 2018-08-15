@@ -1,6 +1,7 @@
 package demoforAll;
 
 import java.sql.*;
+import java.util.*;
 
 import enums.DriverInfoEnum;
 
@@ -29,9 +30,11 @@ public class DB_manipulator {
 	}
 	
 	public final static void setParameters(PreparedStatement pst, Object...parameters) {
+		System.out.println(parameters);
 		try {
 			if(parameters.length > 0) {
 				for(int i = 0; i < parameters.length; i++) {
+					System.out.println(parameters[i]);
 					pst.setObject(i+1, parameters[i]);
 				} 
 			}
@@ -77,16 +80,28 @@ public class DB_manipulator {
 		System.out.println(res != 0 ? "删除成功" : "删除失败");
 	}
 	
-	public static void read() throws SQLException {
-		String rsql = "select * from t_emp";
-		pst = conn.prepareStatement(rsql);
+	public static List<Map<String, Object>>  executeQuery(String sql, Object...objects) throws SQLException {
+		List<Map<String, Object>> table = new ArrayList<Map<String, Object>>();
+		System.out.println("查询语句为" + sql);
+		System.out.println("可变参数为" + objects);
+		getConnection();
+		pst = conn.prepareStatement(sql);
+		setParameters(pst, objects);
 		rs = pst.executeQuery();
-		while(rs.next()) {
-			int emp_id = rs.getInt(1);
-			String emp_name = rs.getString(2);
-			Object obj = rs.getObject(5);
-			System.out.println(emp_id + "----" + emp_name + "----" + obj);
+		if(rs != null) {
+			ResultSetMetaData rsd = rs.getMetaData();
+			int columnCount = rsd.getColumnCount();
+			while(rs.next()) {
+				Map<String, Object> row = new HashMap<>(columnCount);
+				for(int i = 0; i < columnCount; i++) {
+					String columnName = rsd.getColumnName(i+1);
+					Object columnValue = rs.getObject(columnName);
+					row.put(columnName, columnValue);
+				}
+				table.add(row);
+			}
 		}
+		return table;
 	}
 	
 	/*
