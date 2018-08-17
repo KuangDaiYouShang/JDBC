@@ -3,10 +3,12 @@ package demoforAll;
 import java.sql.*;
 import java.util.*;
 
-import enums.DriverInfoEnum;
+import demoforAll.pool.DataSourcePool;
+import demoforAll.pool.PooledConnection;
 
 public class DB_manipulator {
-	static{
+	/*
+	 static{
 		try {
 			Class.forName(DriverInfoEnum.DRIVER.getinfo());
 		} catch (ClassNotFoundException e) {
@@ -16,17 +18,16 @@ public class DB_manipulator {
 	private static final String url = DriverInfoEnum.URL.getinfo();
 	private static final String usrname = DriverInfoEnum.USERNAME.getinfo();
 	private static final String password = DriverInfoEnum.PASSWORD.getinfo();
+	*/
 	
-	private static Connection conn = null;
+	private static PooledConnection conn = null;
 	private static PreparedStatement pst = null;
 	private static  ResultSet rs = null;
 	
+	private final static DataSourcePool cPool = new DataSourcePool();
+	
 	public final static void getConnection() { 
-		try {
-			conn = DriverManager.getConnection(url, usrname, password);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		conn = cPool.getConnection();
 	}
 	
 	public final static void setParameters(PreparedStatement pst, Object...parameters) {
@@ -47,12 +48,46 @@ public class DB_manipulator {
 	public static int executeUpdate(String sql, Object...objects) throws SQLException {
 		int row = 0;
 		getConnection();
-		pst = conn.prepareStatement(sql);
+		pst = conn.getConnection().prepareStatement(sql);
 		setParameters(pst, objects);
 		row = pst.executeUpdate();
+		if(pst != null) {
+			pst.close();
+		}
+		if(conn != null) {
+			conn.close();
+		}
 		return row;
 	}
 	
+
+	
+	public static List<Map<String, Object>>  executeQuery(String sql, Object...objects) throws SQLException {
+		List<Map<String, Object>> table = new ArrayList<Map<String, Object>>();
+		System.out.println("查询语句为" + sql);
+		System.out.println("可变参数为" + objects);
+		getConnection();
+		pst = conn.getConnection().prepareStatement(sql);
+		setParameters(pst, objects);
+		rs = pst.executeQuery();
+		if(rs != null) {
+			ResultSetMetaData rsd = rs.getMetaData();
+			int columnCount = rsd.getColumnCount();
+			while(rs.next()) {
+				Map<String, Object> row = new HashMap<>(columnCount);
+				for(int i = 0; i < columnCount; i++) {
+					String columnName = rsd.getColumnName(i+1);
+					Object columnValue = rs.getObject(columnName);
+					row.put(columnName, columnValue);
+				}
+				table.add(row);
+			}
+		}
+		return table;
+	}
+	
+	/*
+	 * 
 	public static void add(String name, String sex) throws SQLException {
 		String addsql = "insert into t_emp(emp_id,emp_name,emp_sex) values(null,"
 				+ "?,?)";
@@ -79,32 +114,6 @@ public class DB_manipulator {
 		int res = pst.executeUpdate();
 		System.out.println(res != 0 ? "删除成功" : "删除失败");
 	}
-	
-	public static List<Map<String, Object>>  executeQuery(String sql, Object...objects) throws SQLException {
-		List<Map<String, Object>> table = new ArrayList<Map<String, Object>>();
-		System.out.println("查询语句为" + sql);
-		System.out.println("可变参数为" + objects);
-		getConnection();
-		pst = conn.prepareStatement(sql);
-		setParameters(pst, objects);
-		rs = pst.executeQuery();
-		if(rs != null) {
-			ResultSetMetaData rsd = rs.getMetaData();
-			int columnCount = rsd.getColumnCount();
-			while(rs.next()) {
-				Map<String, Object> row = new HashMap<>(columnCount);
-				for(int i = 0; i < columnCount; i++) {
-					String columnName = rsd.getColumnName(i+1);
-					Object columnValue = rs.getObject(columnName);
-					row.put(columnName, columnValue);
-				}
-				table.add(row);
-			}
-		}
-		return table;
-	}
-	
-	/*
 	public static void main(String args[]) {
 		try {
 			conn = DriverManager.getConnection(url, usrname, password);
