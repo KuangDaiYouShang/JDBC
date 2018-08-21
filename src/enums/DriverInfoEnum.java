@@ -1,5 +1,6 @@
 package enums;
 
+import config.PropertiesConfiguration;
 import config.propertiesPlaceHolder;
 
 public enum DriverInfoEnum {
@@ -8,28 +9,28 @@ public enum DriverInfoEnum {
 		@Override
 		public String getinfo() {
 			// TODO Auto-generated method stub
-			return new propertiesPlaceHolder().getProperty("jdbc.driver_class");
+			return PropertiesConfiguration.getInstance().getProperty("jdbc.driver_class");
 		}},
 	URL{
 
 		@Override
 		public String getinfo() {
 			// TODO Auto-generated method stub
-			return new propertiesPlaceHolder().getProperty("jdbc.url");
+			return PropertiesConfiguration.getInstance().getProperty("jdbc.url");
 		}},
 	USERNAME{
 
 		@Override
 		public String getinfo() {
 			// TODO Auto-generated method stub
-			return new propertiesPlaceHolder().getProperty("jdbc.usrname");
+			return PropertiesConfiguration.getInstance().getProperty("jdbc.usrname");
 		}},
 	PASSWORD{
 
 		@Override
 		public String getinfo() {
 			// TODO Auto-generated method stub
-			return new propertiesPlaceHolder().getProperty("jdbc.password");
+			return PropertiesConfiguration.getInstance().getProperty("jdbc.password");
 		}};
 	
 	public abstract String getinfo();

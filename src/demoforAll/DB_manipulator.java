@@ -3,10 +3,11 @@ package demoforAll;
 import java.sql.*;
 import java.util.*;
 
-import demoforAll.pool.DataSourcePool;
+import Exception.MyORMException;
+import demoforAll.pool.DataSourcePoolManager;
 import demoforAll.pool.PooledConnection;
 
-public class DB_manipulator {
+public class DB_manipulator implements Transaction {
 	/*
 	 static{
 		try {
@@ -24,10 +25,18 @@ public class DB_manipulator {
 	private static PreparedStatement pst = null;
 	private static  ResultSet rs = null;
 	
-	private final static DataSourcePool cPool = new DataSourcePool();
+	//private final static DataSourcePool cPool = new DataSourcePool();
+	private static final ThreadLocal<PooledConnection> threadLocal = new ThreadLocal<PooledConnection>();
 	
 	public final static void getConnection() { 
-		conn = cPool.getConnection();
+		conn = threadLocal.get();
+		
+		//检测当前线程是否已经存在连接，若不存在，从线程池中抓取。
+		if(conn == null) {
+			conn = DataSourcePoolManager.getInstance().getConnection();
+			//把连接池中获取的连接对象绑定到当前线程上面。
+			threadLocal.set(conn);
+		}
 	}
 	
 	public final static void setParameters(PreparedStatement pst, Object...parameters) {
@@ -84,6 +93,52 @@ public class DB_manipulator {
 			}
 		}
 		return table;
+	}
+
+	@Override
+	public void begin() {
+		// TODO Auto-generated method stub
+		PooledConnection conn = threadLocal.get();
+		if(conn != null) {
+			try {
+				conn.getConnection().setAutoCommit(false);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				throw new MyORMException("开启事务失败" + e.getMessage());
+			}
+		}
+		
+	}
+
+	@Override
+	public void commit() {
+		PooledConnection conn = threadLocal.get();
+		if(conn != null) {
+			try {
+				conn.getConnection().commit();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				throw new MyORMException("Failed to commit" + e.getMessage());
+			} finally {
+				threadLocal.remove();
+			}
+		}	
+	}
+
+	@Override
+	public void rollback() {
+		PooledConnection conn = threadLocal.get();
+		if(conn != null) {
+			try {
+				conn.getConnection().rollback();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				throw new MyORMException("Failed to rollback" + e.getMessage());
+			} finally {
+				threadLocal.remove();
+			}
+		}	
+		
 	}
 	
 	/*

@@ -1,6 +1,6 @@
 package enums;
 
-import config.propertiesPlaceHolder;
+import config.PropertiesConfiguration;
 
 public enum poolEnum {
 	
@@ -10,7 +10,7 @@ public enum poolEnum {
 		@Override
 		public String getinfo() {
 			// TODO Auto-generated method stub
-			return new propertiesPlaceHolder().getProperty("InitialSize");
+			return PropertiesConfiguration.getInstance().getProperty("InitialSize");
 		}},
 	
 	INCREAMENT_SIZE {
@@ -18,7 +18,7 @@ public enum poolEnum {
 			@Override
 			public String getinfo() {
 				// TODO Auto-generated method stub
-				return new propertiesPlaceHolder().getProperty("IncreamentSize");
+				return PropertiesConfiguration.getInstance().getProperty("IncreamentSize");
 			}},
 	
 	MAX_SIZE {
@@ -26,7 +26,7 @@ public enum poolEnum {
 				@Override
 				public String getinfo() {
 					// TODO Auto-generated method stub
-					return new propertiesPlaceHolder().getProperty("maxSize");
+					return PropertiesConfiguration.getInstance().getProperty("maxSize");
 				}},
 	
 	TIMEOUT {
@@ -34,7 +34,7 @@ public enum poolEnum {
 					@Override
 					public String getinfo() {
 						// TODO Auto-generated method stub
-						return new propertiesPlaceHolder().getProperty("timeout");
+						return PropertiesConfiguration.getInstance().getProperty("timeout");
 					}};
 	public abstract String getinfo();
 }
