@@ -48,4 +48,39 @@ public class BeanUtils {
         }
         return instance;
     }
+
+    public static Object params2SystemClass(HttpServletRequest request, Class<?> clazz) throws Exception {
+
+        Enumeration<String> params = request.getParameterNames();
+        Object fieldValue = null;
+
+        while(params.hasMoreElements()) {
+            String fieldName = params.nextElement();
+            if("param".equals(fieldName)) {
+                continue;
+            }
+            try {
+
+                String value = request.getParameter(fieldName);
+                if (clazz == Integer.class) {
+                    fieldValue = Integer.valueOf(value);
+                } else if (clazz == String.class) {
+                    fieldValue = value;
+                } else if (clazz == Double.class) {
+                    fieldValue = Double.valueOf(value);
+                } else if (clazz == Date.class) {
+                    fieldValue = new SimpleDateFormat("yyyy-MM-dd").parse(value);
+                } else if (clazz == BigDecimal.class) {
+                    fieldValue = new BigDecimal(value);
+                } else if (clazz == double.class) {
+                    fieldValue = Double.parseDouble(value);
+                } else if (clazz == int.class) {
+                    fieldValue = Integer.parseInt(value);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return fieldValue;
+    }
 }

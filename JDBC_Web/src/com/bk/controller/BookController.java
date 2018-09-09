@@ -19,36 +19,37 @@ import java.util.List;
 
 public class BookController extends BaseServlet {
 
-    public String list(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    public String list(HttpServletRequest request) throws ServletException, IOException {
         bookDao bd = new BookDaoImpl();
         List<BookEntity> bookList = bd.getBooks();
         request.setAttribute("books", bookList);
 
         //request.getRequestDispatcher("/WEB-INF/book/list.jsp").forward(request,response);
         //上一行代码放在BaseServlet中执行，此处只需返回路径。
-        return "/WEB-INF/book/list.jsp";
+        return "forward:/WEB-INF/book/list.jsp";
     }
 
-    public void delete(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public String delete(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String bookId = request.getParameter("bookId");
         System.out.println(bookId);
         bookDao bd = new BookDaoImpl();
         bd.deleteBook(Integer.valueOf(bookId));
         //redirect to the list page
-        response.sendRedirect(request.getContextPath()+"/book?param=list");
+        //response.sendRedirect(request.getContextPath()+"/book?param=list");
+        return "redirect:/book/list";
     }
 
-    public String initialUp(HttpServletRequest request, HttpServletResponse response) {
+    public String initialUp(HttpServletRequest request) {
         String bookId = request.getParameter("bookId");
         bookDao bd = new BookDaoImpl();
         BookEntity b = bd.getBookById(Integer.valueOf(bookId));
         request.setAttribute("book", b);
         //request.getRequestDispatcher("/WEB-INF/book/update.jsp").forward(request,response);
 
-        return "/WEB-INF/book/update.jsp";
+        return "forward:/WEB-INF/book/update.jsp";
     }
 
-    public void update(HttpServletRequest request, HttpServletResponse response, BookEntity b) throws Exception {
+    public String update(HttpServletRequest request, HttpServletResponse response, BookEntity b) throws Exception {
 /*        String id = request.getParameter("bookId");
         String name = request.getParameter("bookName");
         String author = request.getParameter("bookAuthor");
@@ -64,15 +65,16 @@ public class BookController extends BaseServlet {
         //BookEntity b = BeanUtils.params2Fields(request, BookEntity.class);
         bookDao bd = new BookDaoImpl();
         bd.updateBook(b);
-        System.out.println("------" + request.getContextPath()+ "--------");
-        response.sendRedirect(request.getContextPath()+"/book?param=list");
+        //response.sendRedirect(request.getContextPath()+"/book?param=list");
+        return "redirect:/book/list";
     }
 
-    public String initialAdd(HttpServletRequest request, HttpServletResponse response) {
-        return "/WEB-INF/book/Add.jsp";
+    public String initialAdd() {
+        //不带数据的转发
+        return "forward:/WEB-INF/book/Add.jsp";
     }
 
-    public void add(HttpServletRequest request, HttpServletResponse response, BookEntity b) throws Exception {
+    public String add(BookEntity b) throws Exception {
 /*        String name = request.getParameter("bookName");
         String author = request.getParameter("bookAuthor");
         String price = request.getParameter("bookPrice");
@@ -86,16 +88,7 @@ public class BookController extends BaseServlet {
         //BookEntity b = BeanUtils.params2Fields(request, BookEntity.class);
         bookDao bd = new BookDaoImpl();
         bd.addBook(b);
-        response.sendRedirect(request.getContextPath()+"/book?param=list");
-    }
-
-    private Date string2Date(String s) {
-        SimpleDateFormat sim = new SimpleDateFormat("yyyy-MM-dd");
-        try {
-            return sim.parse(s);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        return null;
+        //response.sendRedirect(request.getContextPath()+"/book?param=list");
+        return "redirect:/book/list";
     }
 }

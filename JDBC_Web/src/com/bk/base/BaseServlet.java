@@ -1,17 +1,23 @@
 package com.bk.base;
 
 import com.bk.util.BeanUtils;
+import com.bk.util.StringUtils;
 import com.ruanmou.vip.orm.common.ArrayUtils;
+import com.sun.deploy.net.HttpResponse;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.bk.util.ClassUtils.isSystemClass;
 
 public abstract class BaseServlet extends HttpServlet {
     @Override
@@ -43,6 +49,8 @@ public abstract class BaseServlet extends HttpServlet {
         Class<? extends BaseServlet> aClass = this.getClass();
 
         Method[] declaredMethods = aClass.getDeclaredMethods();
+
+        Object url = null;
         try {
             Method method = null;
 
@@ -55,35 +63,46 @@ public abstract class BaseServlet extends HttpServlet {
                 }
             }
 
-            paramObjects.add(req);
-            paramObjects.add(resp);
-
             Class<?>[] parameterTypes = method.getParameterTypes();
             if(ArrayUtils.isNotEmpty(parameterTypes)) {
                 for(Class<?> c : parameterTypes) {
                     if(!c.isInterface()) {
-                        paramObjects.add(BeanUtils.params2Fields(req, c));
+                        if(!isSystemClass(c)) {
+                            paramObjects.add(BeanUtils.params2Fields(req, c));
+                        } else {
+                            paramObjects.add(BeanUtils.params2SystemClass(req, c));
+                        }
+                    } else {
+                        if(c == HttpServletRequest.class) {
+                            paramObjects.add(req);
+                        } else if (c == HttpServletResponse.class) {
+                            paramObjects.add(resp);
+                        } else if (c == HttpSession.class) {
+                            paramObjects.add(req.getSession());
+                        } else if (c == ServletContext.class) {
+                            paramObjects.add(this.getServletContext());
+                        }
                     }
                 }
             }
+            //invoke the method
+            if(paramObjects != null && paramObjects.size() > 0) {
+               url = method.invoke(this, paramObjects.toArray());
+            } else {
+                url = method.invoke(this);
+            }
 
-            String returnType = method.getReturnType().getSimpleName().toLowerCase();
-
-            if("string".equals(returnType)) {
-                Object url = null;
-                if(paramObjects.size() > 2) {
-                    url = method.invoke(this,paramObjects.toArray());
+            if(url != null) {
+                String urlString = url.toString();
+                if(urlString.startsWith("forward:")) {
+                    req.getRequestDispatcher(StringUtils.stringTrim(urlString, "forward:")).forward(req,resp);
+                } else if (urlString.startsWith("redirect")) {
+                    resp.sendRedirect(StringUtils.stringTrim(req.getContextPath()+urlString, "redirect:"));
                 } else {
-                    url = method.invoke(this, req, resp);
+                    req.getRequestDispatcher(urlString).forward(req,resp);
                 }
-                //Dispatch
-                req.getRequestDispatcher(url+"").forward(req,resp);
-            } else if ("void".equals(returnType)){
-                if(paramObjects.size()>2) {
-                    method.invoke(this, paramObjects.toArray());
-                } else {
-                    method.invoke(this, req, resp);
-                }
+            } else {
+                System.out.println("访问的"+ url + "路径不存在");
             }
         }
         catch (Exception e) {
