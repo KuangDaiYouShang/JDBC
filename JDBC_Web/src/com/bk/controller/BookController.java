@@ -1,5 +1,7 @@
 package com.bk.controller;
 
+import annotation.MyAutoWired;
+import annotation.MyController;
 import com.bk.base.BaseServlet;
 import com.bk.dao.bookDao;
 import com.bk.dao.impl.BookDaoImpl;
@@ -17,10 +19,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+@MyController
 public class BookController extends BaseServlet {
+    @MyAutoWired
+    private bookDao bd;
 
     public String list(HttpServletRequest request) throws ServletException, IOException {
-        bookDao bd = new BookDaoImpl();
+        //bookDao bd = new BookDaoImpl();
         List<BookEntity> bookList = bd.getBooks();
         request.setAttribute("books", bookList);
 
@@ -32,7 +37,7 @@ public class BookController extends BaseServlet {
     public String delete(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String bookId = request.getParameter("bookId");
         System.out.println(bookId);
-        bookDao bd = new BookDaoImpl();
+        //bookDao bd = new BookDaoImpl();
         bd.deleteBook(Integer.valueOf(bookId));
         //redirect to the list page
         //response.sendRedirect(request.getContextPath()+"/book?param=list");
@@ -41,7 +46,7 @@ public class BookController extends BaseServlet {
 
     public String initialUp(HttpServletRequest request) {
         String bookId = request.getParameter("bookId");
-        bookDao bd = new BookDaoImpl();
+        //bookDao bd = new BookDaoImpl();
         BookEntity b = bd.getBookById(Integer.valueOf(bookId));
         request.setAttribute("book", b);
         //request.getRequestDispatcher("/WEB-INF/book/update.jsp").forward(request,response);
@@ -63,7 +68,7 @@ public class BookController extends BaseServlet {
         b.setBookPrice(decimal);
         b.setBookDate(string2Date(date));*/
         //BookEntity b = BeanUtils.params2Fields(request, BookEntity.class);
-        bookDao bd = new BookDaoImpl();
+        //bookDao bd = new BookDaoImpl();
         bd.updateBook(b);
         //response.sendRedirect(request.getContextPath()+"/book?param=list");
         return "redirect:/book/list";
@@ -86,7 +91,7 @@ public class BookController extends BaseServlet {
         b.setBookPrice(decimal);
         b.setBookDate(string2Date(date));*/
         //BookEntity b = BeanUtils.params2Fields(request, BookEntity.class);
-        bookDao bd = new BookDaoImpl();
+        //bookDao bd = new BookDaoImpl();
         bd.addBook(b);
         //response.sendRedirect(request.getContextPath()+"/book?param=list");
         return "redirect:/book/list";

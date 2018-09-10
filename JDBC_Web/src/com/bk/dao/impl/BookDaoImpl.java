@@ -2,6 +2,8 @@ package com.bk.dao.impl;
 
 //import Handler.MySQLTemplate;
 //import Handler.TemplateHandler;
+import annotation.MyAutoWired;
+import annotation.MyRepository;
 import com.bk.entity.BookEntity;
 import com.bk.dao.bookDao;
 import com.ruanmou.vip.orm.constant.SearchMode;
@@ -11,10 +13,12 @@ import com.ruanmou.vip.orm.core.handler.mysql.MySQLTemplateHandler;
 
 import java.util.List;
 
+@MyRepository
 public class BookDaoImpl implements bookDao {
 
     //private TemplateHandler template = new MySQLTemplate();
-    private HandlerTemplate template = new MySQLTemplateHandler();
+    @MyAutoWired
+    private HandlerTemplate template;
 
     @Override
     public void addBook(BookEntity book) {
