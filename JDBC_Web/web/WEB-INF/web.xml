@@ -4,7 +4,23 @@
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
          version="4.0">
 
+
     <servlet>
+        <servlet-name>mySpringMVC</servlet-name>
+        <servlet-class>MySpringMVC.DispatcherServlet</servlet-class>
+        <init-param>
+            <param-name>Location</param-name>
+            <param-value>classpath:applicationContext.xml</param-value>
+        </init-param>
+        <load-on-startup>0</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>mySpringMVC</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+
+ <!--   <servlet>
         <servlet-name>book</servlet-name>
         <servlet-class>com.bk.controller.BookController</servlet-class>
     </servlet>
@@ -12,9 +28,26 @@
     <servlet-mapping>
         <servlet-name>book</servlet-name>
         <url-pattern>/book</url-pattern>
-    </servlet-mapping>
+    </servlet-mapping>-->
+
+
+    <filter>
+        <filter-name>filer</filter-name>
+        <filter-class>com.bk.filter.EncodingFilter</filter-class>
+        <init-param>
+            <param-name>encode</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>filer</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
 
     <welcome-file-list>
         <welcome-file>book?param=list</welcome-file>
     </welcome-file-list>
+
+
 </web-app>

@@ -27,4 +27,11 @@ public class ReflectUtil {
         }
         return annoName;
     }
+
+    public static String handleUrl(String s) {
+        if(!s.startsWith("/")) {
+            return "/" + s;
+        }
+        return s;
+    }
 }

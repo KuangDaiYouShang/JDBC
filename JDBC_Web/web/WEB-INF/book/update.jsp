@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="css/main.css" />
 </head>
 <body>
-    <form action="book?param=update" method="post">
+    <form action="book/updateBook" method="post">
         <table class="tb">
             <tr>
                 <th>编号</th>

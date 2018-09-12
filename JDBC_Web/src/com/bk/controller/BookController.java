@@ -2,6 +2,7 @@ package com.bk.controller;
 
 import annotation.MyAutoWired;
 import annotation.MyController;
+import annotation.MyRequestMapping;
 import com.bk.base.BaseServlet;
 import com.bk.dao.bookDao;
 import com.bk.dao.impl.BookDaoImpl;
@@ -20,10 +21,12 @@ import java.util.Date;
 import java.util.List;
 
 @MyController
-public class BookController extends BaseServlet {
+@MyRequestMapping(value = "book")
+public class BookController  {
     @MyAutoWired
     private bookDao bd;
 
+    @MyRequestMapping("listBook")
     public String list(HttpServletRequest request) throws ServletException, IOException {
         //bookDao bd = new BookDaoImpl();
         List<BookEntity> bookList = bd.getBooks();
@@ -34,6 +37,7 @@ public class BookController extends BaseServlet {
         return "forward:/WEB-INF/book/list.jsp";
     }
 
+    @MyRequestMapping("deleteBook")
     public String delete(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String bookId = request.getParameter("bookId");
         System.out.println(bookId);
@@ -41,9 +45,10 @@ public class BookController extends BaseServlet {
         bd.deleteBook(Integer.valueOf(bookId));
         //redirect to the list page
         //response.sendRedirect(request.getContextPath()+"/book?param=list");
-        return "redirect:/book/list";
+        return "redirect:/book/listBook";
     }
 
+    @MyRequestMapping("initUpdate")
     public String initialUp(HttpServletRequest request) {
         String bookId = request.getParameter("bookId");
         //bookDao bd = new BookDaoImpl();
@@ -54,6 +59,7 @@ public class BookController extends BaseServlet {
         return "forward:/WEB-INF/book/update.jsp";
     }
 
+    @MyRequestMapping("updateBook")
     public String update(HttpServletRequest request, HttpServletResponse response, BookEntity b) throws Exception {
 /*        String id = request.getParameter("bookId");
         String name = request.getParameter("bookName");
@@ -71,14 +77,16 @@ public class BookController extends BaseServlet {
         //bookDao bd = new BookDaoImpl();
         bd.updateBook(b);
         //response.sendRedirect(request.getContextPath()+"/book?param=list");
-        return "redirect:/book/list";
+        return "redirect:/book/listBook";
     }
 
+    @MyRequestMapping("initAdd")
     public String initialAdd() {
         //不带数据的转发
         return "forward:/WEB-INF/book/Add.jsp";
     }
 
+    @MyRequestMapping("addBook")
     public String add(BookEntity b) throws Exception {
 /*        String name = request.getParameter("bookName");
         String author = request.getParameter("bookAuthor");
@@ -94,6 +102,6 @@ public class BookController extends BaseServlet {
         //bookDao bd = new BookDaoImpl();
         bd.addBook(b);
         //response.sendRedirect(request.getContextPath()+"/book?param=list");
-        return "redirect:/book/list";
+        return "redirect:/book/listBook";
     }
 }

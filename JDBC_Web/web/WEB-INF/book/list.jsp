@@ -32,10 +32,10 @@
         <td>${book.bookAuthor}</td>
         <td>${book.bookPrice}</td>
         <td><fmt:formatDate value="${book.bookDate}" pattern="yyyy-MM-dd"></fmt:formatDate></td>
-        <td><a href="book?param=initialUp&bookId=${book.bookId}">更新</a>|<a href="book?param=delete&bookId=${book.bookId}">删除</a></td>
+        <td><a href="book/initUpdate?bookId=${book.bookId}">更新</a>|<a href="book/deleteBook?bookId=${book.bookId}">删除</a></td>
     </tr>
     </c:forEach>
 </table>
-<caption><a href="book?param=initialAdd">添加图书</a></caption>
+<caption><a href="book/initAdd">添加图书</a></caption>
 </body>
 </html>

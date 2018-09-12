@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="css/main.css" />
 </head>
 <body>
-    <form action="book?param=add" method="post">
+    <form action="book/addBook" method="post">
         <table class="tb">
             <tr>
                 <th>书名</th>
