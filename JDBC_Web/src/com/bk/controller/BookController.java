@@ -7,6 +7,7 @@ import com.bk.base.BaseServlet;
 import com.bk.dao.bookDao;
 import com.bk.dao.impl.BookDaoImpl;
 import com.bk.entity.BookEntity;
+import com.bk.service.BookService;
 import com.bk.util.BeanUtils;
 
 import javax.servlet.ServletException;
@@ -23,13 +24,15 @@ import java.util.List;
 @MyController
 @MyRequestMapping(value = "book")
 public class BookController  {
+
     @MyAutoWired
-    private bookDao bd;
+    private BookService bs;
+    //private bookDao bd;
 
     @MyRequestMapping("listBook")
     public String list(HttpServletRequest request) throws ServletException, IOException {
         //bookDao bd = new BookDaoImpl();
-        List<BookEntity> bookList = bd.getBooks();
+        List<BookEntity> bookList = bs.getBooks();
         request.setAttribute("books", bookList);
 
         //request.getRequestDispatcher("/WEB-INF/book/list.jsp").forward(request,response);
@@ -42,7 +45,7 @@ public class BookController  {
         String bookId = request.getParameter("bookId");
         System.out.println(bookId);
         //bookDao bd = new BookDaoImpl();
-        bd.deleteBook(Integer.valueOf(bookId));
+        bs.deleteBook(Integer.valueOf(bookId));
         //redirect to the list page
         //response.sendRedirect(request.getContextPath()+"/book?param=list");
         return "redirect:/book/listBook";
@@ -52,7 +55,7 @@ public class BookController  {
     public String initialUp(HttpServletRequest request) {
         String bookId = request.getParameter("bookId");
         //bookDao bd = new BookDaoImpl();
-        BookEntity b = bd.getBookById(Integer.valueOf(bookId));
+        BookEntity b = bs.getBookById(Integer.valueOf(bookId));
         request.setAttribute("book", b);
         //request.getRequestDispatcher("/WEB-INF/book/update.jsp").forward(request,response);
 
@@ -75,7 +78,7 @@ public class BookController  {
         b.setBookDate(string2Date(date));*/
         //BookEntity b = BeanUtils.params2Fields(request, BookEntity.class);
         //bookDao bd = new BookDaoImpl();
-        bd.updateBook(b);
+        bs.updateBook(b);
         //response.sendRedirect(request.getContextPath()+"/book?param=list");
         return "redirect:/book/listBook";
     }
@@ -100,7 +103,7 @@ public class BookController  {
         b.setBookDate(string2Date(date));*/
         //BookEntity b = BeanUtils.params2Fields(request, BookEntity.class);
         //bookDao bd = new BookDaoImpl();
-        bd.addBook(b);
+        bs.addBook(b);
         //response.sendRedirect(request.getContextPath()+"/book?param=list");
         return "redirect:/book/listBook";
     }
