@@ -70,7 +70,7 @@ public abstract class BaseServlet extends HttpServlet {
                         if(!isSystemClass(c)) {
                             paramObjects.add(BeanUtils.params2Fields(req, c));
                         } else {
-                            paramObjects.add(BeanUtils.params2SystemClass(req, c));
+                            paramObjects.add(BeanUtils.params2SystemClass(req, c, null));
                         }
                     } else {
                         if(c == HttpServletRequest.class) {

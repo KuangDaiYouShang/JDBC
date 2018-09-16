@@ -17,6 +17,7 @@
 </head>
 <body>
 <table class="tb">
+    <caption>${account==null? "未登录" : "已登录"}</caption>
     <tr>
         <th>编号</th>
         <th>名称</th>

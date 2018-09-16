@@ -1,6 +1,7 @@
 package MySpringMVC;
 
 import MySpringMVC.util.ReflectUtil;
+import MySpringMVC.util.javassits.Classes;
 import annotation.*;
 import com.bk.dao.bookDao;
 import com.bk.util.BeanUtils;
@@ -73,13 +74,41 @@ public class DispatcherServlet extends HttpServlet {
         String cont = req.getContextPath();
         String path = uri.replace(cont, "");
         Method method = (Method)urlMappingContext.get(path);
-        List<Object> paramObjects = new ArrayList<>();
+        List<Object> paramObjects = null;
+        //定义一个存储形参名称与形参类型的Map
+        Map<String, Class<?>> paramMappingToClass = new LinkedHashMap<String, Class<?>>();
+
         Object url = null;
         if(method != null) {
             try {
                 Class<?>[] parameterTypes = method.getParameterTypes();
-                if(ArrayUtils.isNotEmpty(parameterTypes)) {
-                    for(Class<?> c : parameterTypes) {
+                String[] methodParamNames = Classes.getMethodParamNames(method);
+                for(int i = 0; i < parameterTypes.length; i++) {
+                    paramMappingToClass.put(methodParamNames[i], parameterTypes[i]);
+                }
+                if(!paramMappingToClass.isEmpty()) {
+                    paramObjects = new ArrayList<Object>();
+                    for(Map.Entry<String, Class<?>> map : paramMappingToClass.entrySet()) {
+                        Class<?> c = map.getValue();
+                        if(!c.isInterface()) {
+                            if(!isSystemClass(c)) {
+                                paramObjects.add(BeanUtils.params2Fields(req, c));
+                            } else {
+                                paramObjects.add(BeanUtils.params2SystemClass(req, c, map.getKey()));
+                            }
+                        } else {
+                            if(c == HttpServletRequest.class) {
+                                paramObjects.add(req);
+                            } else if (c == HttpServletResponse.class) {
+                                paramObjects.add(resp);
+                            } else if (c == HttpSession.class) {
+                                paramObjects.add(req.getSession());
+                            } else if (c == ServletContext.class) {
+                                paramObjects.add(this.getServletContext());
+                            }
+                        }
+                    }
+                    /*for(Class<?> c : parameterTypes) {
                         if(!c.isInterface()) {
                             if(!isSystemClass(c)) {
                                 paramObjects.add(BeanUtils.params2Fields(req, c));
@@ -97,7 +126,7 @@ public class DispatcherServlet extends HttpServlet {
                                 paramObjects.add(this.getServletContext());
                             }
                         }
-                    }
+                    }*/
                 }
 
                 //获取Controller类的实例。
