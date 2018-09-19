@@ -13,6 +13,11 @@ public class UserDaoImpl implements UserDao {
     private HandlerTemplate template;
 
     @Override
+    public void setTemplate(HandlerTemplate template) {
+        this.template = template;
+    }
+
+    @Override
     public boolean login(UserEntity user) {
         return template.queryForList(UserEntity.class, user).size() > 0;
     }

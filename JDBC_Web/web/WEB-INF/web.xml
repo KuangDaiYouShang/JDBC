@@ -52,7 +52,7 @@
     </filter-mapping>
 
     <welcome-file-list>
-        <welcome-file>book?param=list</welcome-file>
+        <welcome-file>login.jsp</welcome-file>
     </welcome-file-list>
 
 

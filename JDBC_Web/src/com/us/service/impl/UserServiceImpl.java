@@ -16,4 +16,9 @@ public class UserServiceImpl implements UserService {
     public boolean login(UserEntity user) {
        return ud.login(user);
     }
+
+    @Override
+    public void setUserDao(UserDao ud) {
+        this.ud = ud;
+    }
 }

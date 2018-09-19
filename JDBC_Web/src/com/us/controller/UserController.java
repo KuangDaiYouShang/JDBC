@@ -3,6 +3,7 @@ package com.us.controller;
 import annotation.MyAutoWired;
 import annotation.MyController;
 import annotation.MyRequestMapping;
+import com.bk.util.CookieUtils;
 import com.us.entity.UserEntity;
 import com.us.service.UserService;
 
@@ -30,7 +31,7 @@ public class UserController {
 
         if(flag) {
             session.setAttribute("account", user.getAccount());
-            if(al != null) {
+            if(request.getParameter("al") != null) {
                 Cookie userCookie = new Cookie("al", user.getAccount()+"_"+user.getPassword());
                 userCookie.setMaxAge(3600*24);
                 userCookie.setPath(request.getContextPath()+"/");
@@ -41,6 +42,7 @@ public class UserController {
                 userCookie.setPath(request.getContextPath()+"/");
                 response.addCookie(userCookie);
             }
+            //CookieUtils.addCookie(request,response,al,user);
             return "redirect:/book/listBook";
         } else {
             //return "redirect:/login.jsp";
